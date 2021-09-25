@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "ofApp::createActor(int):ofApp.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "actors[idx]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ofApp::update():ofApp.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "actors">
+            </PersistentString>
+            <PersistentString
+               value = "first_free_actor">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
