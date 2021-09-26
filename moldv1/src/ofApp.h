@@ -3,8 +3,7 @@
 #include "ofMain.h"
 #include "actor.hpp"
 #include "boards.hpp"
-
-#define MAX_ACTORS 100000
+#include "config.h"
 
 class ofApp : public ofBaseApp{
     
@@ -30,8 +29,6 @@ class ofApp : public ofBaseApp{
         long total_created = 0;
         long total_freed = 0;
         long conflicts = 0;
-    
-        Boards          boards;
     
         ofTexture        texGray;
 

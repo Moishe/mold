@@ -1,13 +1,16 @@
 #include "ofApp.h"
+#include "config.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/_DSC2792-Edit.jpg");
+    Boards &boards = Boards::getInstance();
+//    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/_DSC2792-Edit.jpg");
+    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/first.jpg");
 
-    for (int i = 0; i < max_actors; i++) {
-        if (i < seed_actors) {
-            actors[i].x = ofRandom(w);
-            actors[i].y = ofRandom(h);
+    for (int i = 0; i < Config::max_actors; i++) {
+        if (i < Config::seed_actors) {
+            actors[i].x = ofRandom(boards.w);
+            actors[i].y = ofRandom(boards.h);
             actors[i].d = ofRandom(PI * 2);
             actors[i].v = 1;
             actors[i].rejuvenate();
@@ -16,9 +19,9 @@ void ofApp::setup(){
         }
     }
     
-    first_free_actor = seed_actors + 1;
+    first_free_actor = Config::seed_actors + 1;
 
-    texGray.allocate(pixelBuffer[0]);
+    texGray.allocate(boards.pixelBuffer[0]);
 }
 
 int getPixelAt(ofPixels &buf, int x, int y) {
@@ -51,7 +54,7 @@ void ofApp::createActor(int i, int light_seeker) {
         return;
     }
     
-    if (first_free_actor == max_actors) {
+    if (first_free_actor == Config::max_actors) {
         return;
     }
     
@@ -61,27 +64,33 @@ void ofApp::createActor(int i, int light_seeker) {
     first_free_actor = actors[idx].next_free;
     actors[idx].initFromActor(actors[i]);
     actors[idx].light_seeking = light_seeker;
-    actors[idx].app = this;
 }
 
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    //ofBackground(255,255,255);
-    
-    int readBufferIdx = getReadBufferIdx();
-    int drawBufferIdx = getDrawBufferIdx();
+    Boards &boards = Boards::getInstance();
 
-    for (int i = 0; i < max_actors; i++) {
+    int readBufferIdx = boards.getReadBufferIdx();
+    int drawBufferIdx = boards.getDrawBufferIdx();
+
+    for (int i = 0; i < Config::max_actors; i++) {
         if (actors[i].next_free == -1) {
-            if (!actors[i].move(pixelBuffer[readBufferIdx])) {
+            if (!actors[i].move()) {
                 freeActor(i);
             } else {
                 // heyo let's spawn
-                if ((ofRandom(1.0) < spawnProbability) && (first_free_actor < max_actors)) {
+                bool shouldSpawn = false;
+                if (Config::useMapImgForSpawnProbability) {
+                    int mapImgValue = boards.getImageAt(actors[i].x, actors[i].y);
+                    shouldSpawn = ofRandom(255) < mapImgValue;
+                } else {
+                    shouldSpawn = ofRandom(1.0) < Config::spawnProbability;
+                }
+                if (shouldSpawn && (first_free_actor < Config::max_actors)) {
                     createActor(i);
                 }
-                if (!actors[i].deposit(pixelBuffer[drawBufferIdx])) {
+                if (!actors[i].deposit()) {
                     freeActor(i);
                     //createActor(i, -1);
                 }
@@ -89,22 +98,24 @@ void ofApp::update(){
         }
     }
     
-    if (blurRadius > 0) {
-        bufferIdx = getDrawBufferIdx();
-        blurVertical(blurRadius);
+    if (Config::blurRadius > 0) {
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.blurVertical();
 
-        bufferIdx = getDrawBufferIdx();
-        blurHorizontal(blurRadius);
+        boards.blurHorizontal();
+    } else {
+        boards.bufferIdx = boards.getDrawBufferIdx();
     }
 
-    texGray.loadData(pixelBuffer[getDrawBufferIdx()].getData(), w,h, GL_LUMINANCE);
+    texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_LUMINANCE);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    Boards &boards = Boards::getInstance();
     ofSetHexColor(0xffffff);
     
-    texGray.draw(0,0,w,h);
+    texGray.draw(0,0,boards.w,boards.h);
 }
 
 //--------------------------------------------------------------
@@ -133,7 +144,8 @@ void ofApp::mousePressed(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+    ofImage img(Boards::getInstance().pixelBuffer[0]);
+    img.save("/Users/moishe/saved-image.png");
 }
 
 //--------------------------------------------------------------
