@@ -2,23 +2,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/_DSC2792-Edit.jpg");
 
-
-    float scale = 1;
-    w = int(1024 * scale);
-    h = int(768 * scale);
-    
-    for (int i = 0; i < 2; i++) {
-        pixelBuffer[i].allocate(w,h,OF_PIXELS_GRAY);
-    }
-
-    // gray pixels, set them randomly
-    for (int i = 0; i < w*h; i++){
-        int v = 0; //int(ofRandom(1.0) * 64.0); //(i % w) * 255.0 / w;
-        pixelBuffer[0][i] = v;
-        pixelBuffer[1][i] = v;
-    }
-    
     for (int i = 0; i < max_actors; i++) {
         if (i < seed_actors) {
             actors[i].x = ofRandom(w);
@@ -76,87 +61,9 @@ void ofApp::createActor(int i, int light_seeker) {
     first_free_actor = actors[idx].next_free;
     actors[idx].initFromActor(actors[i]);
     actors[idx].light_seeking = light_seeker;
+    actors[idx].app = this;
 }
 
-int ofApp::getAt(int x, int y) {
-    if (x < 0 || x >= w || y < 0 || y >= h) {
-        return 0;
-    }
-    
-    return pixelBuffer[getReadBufferIdx()][x + y * w];
-}
-
-void ofApp::setAt(int x, int y, int value) {
-    if (x < 0 || x >= w || y < 0 || y >= h) {
-        return;
-    }
-    
-    pixelBuffer[getDrawBufferIdx()][x + y * w] = value;
-}
-
-void ofApp::blurHorizontal (int radius) {
-    for (int y = 0; y < h; y++) {
-        int total = 0;
-        
-        // Process entire window for first pixel
-        for (int kx = 0; kx <= radius; kx++)
-            total += getAt(kx, y);
-
-        setAt(0, y, total / (radius * 2 + 1));
-
-        // Subsequent pixels just update window total
-        for (int x = 1; x < w - radius; x++) {
-            // Subtract pixel leaving window
-            total -= getAt(x - radius - 1, y);
-            
-            // Add pixel entering window
-            total += getAt(x + radius, y);
-            
-            total = max(0, total);
-            
-            int curval = getAt(x,y);
-            float diff = float(total) / float(radius * 2 + 1) - float(curval);
-            
-            setAt(x, y, round(curval + diff * blurInterpolate));
-        }
-    }
-}
-
-void ofApp::blurVertical (int radius) {
-    for (int x = 0; x < w; x++) {
-        int total = 0;
-        
-        // Process entire window for first pixel
-        for (int ky = 0; ky <= radius; ky++)
-            total += getAt(x, ky);
-
-        setAt(x, 0, total / (radius * 2 + 1));
-
-        // Subsequent pixels just update window total
-        for (int y = 1; y < h - radius; y++) {
-            // Subtract pixel leaving window
-            total -= getAt(x, y - radius - 1);
-            
-            // Add pixel entering window
-            total += getAt(x, y + radius);
-            
-            total = max(0, total);
-            
-            int curval = getAt(x,y);
-            float diff = float(total) / float(radius * 2 + 1) - float(curval);
-            
-            setAt(x, y, round(curval + diff * blurInterpolate));
-        }
-    }
-}
-
-int ofApp::getReadBufferIdx() {
-    return bufferIdx;
-}
-
-int ofApp::getDrawBufferIdx() {
-    return (bufferIdx + 1) % 2;
-}
 
 //--------------------------------------------------------------
 void ofApp::update(){
@@ -164,25 +71,6 @@ void ofApp::update(){
     
     int readBufferIdx = getReadBufferIdx();
     int drawBufferIdx = getDrawBufferIdx();
-
-    /*
-    int radius = 1;
-    float total;
-    int c;
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            total = 0.0;
-            c = 0;
-            for (int ky = max(0, y-radius); ky <= min(h, y+radius); ++ky)
-                for (int kx = max(0, x-radius); kx <= min(w, x+radius); ++kx)
-                {
-                    c++;
-                    total += pixelBuffer[readBufferIdx][ky*w + kx];
-                }
-            pixelBuffer[drawBufferIdx][y*w + x] = total / c;
-        }
-    }
-    */
 
     for (int i = 0; i < max_actors; i++) {
         if (actors[i].next_free == -1) {
@@ -231,7 +119,6 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
-    
 }
 
 //--------------------------------------------------------------

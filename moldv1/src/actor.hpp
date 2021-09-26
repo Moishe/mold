@@ -7,20 +7,22 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofApp.h"
 #include <algorithm>
 
 class actor {
     
 public:
     const float look_sweep = PI / 3;
-    const float look_distance = 30;
-    const float turn_momentum = 0.1;
-    const float wander = PI / 32;
-    const float wander_on_spawn = PI / 2;
-    const int maxAge = 5;
-    const int minAge = 50;
+    const int look_segments = 10;
+    const float look_distance = 15;
+    const float turn_momentum = 0.7;
+    const float wander = PI / 64;
+    const float wander_on_spawn = PI / 64;
+    const int maxAge = 5000;
+    const int minAge = 5000;
 
-    int deposit_amt = 4;
+    int deposit_amt = 6;
     int light_seeking = 1;
 
     float x;
@@ -32,6 +34,8 @@ public:
     int age;
     
     int next_free = -1;
+    
+    ofApp *app;
     
     actor(float x, float y, float v, float d) {
         this->x = x;
@@ -63,6 +67,22 @@ public:
         if (age <= 0) {
             return false;
         }
+        
+        float max_val = 0;
+        float new_direction = 0;
+        for (int i = 0; i < look_segments; i++) {
+            float look_direction = float(i) / float(look_segments) * look_sweep - look_sweep / 2;
+            float v = look_dir(look_direction, map);
+            if (v > max_val) {
+                max_val = v;
+                new_direction = look_direction;
+            } else if (v == max_val && ofRandom(1.0) < 0.05) {
+                new_direction = look_direction;
+            }
+        }
+        
+        d += new_direction * turn_momentum;
+        /*
 
         float lv = look(-1, map);
         float sv = look(0, map);
@@ -73,6 +93,7 @@ public:
         } else if (rv > sv && rv > lv) {
             d += look_sweep * turn_momentum;
         }
+        */
         
         d = d + ofRandom(wander) - wander / 2.0;
         
@@ -95,11 +116,8 @@ public:
         return true;
     }
     
-    float look(int direction, ofPixels &map) {
-        float look_d = d + direction * look_sweep;
-        
-        // for now just get the pixel that's look_distance away. We could
-        // do something fancier in the future.
+    float look_dir(float offset, ofPixels &map) {
+        float look_d = d + offset;
         
         float look_x = x + cos(look_d) * look_distance;
         float look_y = y + sin(look_d) * look_distance;
@@ -112,6 +130,16 @@ public:
         int idx = int(look_x) + int(look_y) * int(map.getWidth());
         
         return map[idx];
+        
+    }
+    
+    float look(int direction, ofPixels &map) {
+        float look_d = d + direction * look_sweep;
+        
+        // for now just get the pixel that's look_distance away. We could
+        // do something fancier in the future.
+        
+        return look_dir(look_d, map);
     }
 
 

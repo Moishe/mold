@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9C8D36A826FFC68B00069748 /* actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C8D36A626FFC68B00069748 /* actor.cpp */; };
+		9C8D36AB2700D67500069748 /* boards.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C8D36A92700D67500069748 /* boards.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
 /* End PBXBuildFile section */
@@ -27,6 +28,9 @@
 /* Begin PBXFileReference section */
 		9C8D36A626FFC68B00069748 /* actor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = actor.cpp; sourceTree = "<group>"; };
 		9C8D36A726FFC68B00069748 /* actor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = actor.hpp; sourceTree = "<group>"; };
+		9C8D36A92700D67500069748 /* boards.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = boards.cpp; sourceTree = "<group>"; };
+		9C8D36AA2700D67500069748 /* boards.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = boards.hpp; sourceTree = "<group>"; };
+		9C8D36AC2700D93B00069748 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		E42962AC2163EDD300A6A9E2 /* ofCamera.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ofCamera.cpp; path = ../../libraries/of_v0.11.2_osx_release/libs/openFrameworks/3d/ofCamera.cpp; sourceTree = SOURCE_ROOT; };
 		E42962AD2163EDD300A6A9E2 /* ofMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ofMesh.h; path = ../../libraries/of_v0.11.2_osx_release/libs/openFrameworks/3d/ofMesh.h; sourceTree = SOURCE_ROOT; };
 		E42962AE2163EDD300A6A9E2 /* ofNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ofNode.h; path = ../../libraries/of_v0.11.2_osx_release/libs/openFrameworks/3d/ofNode.h; sourceTree = SOURCE_ROOT; };
@@ -538,6 +542,9 @@
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				9C8D36A626FFC68B00069748 /* actor.cpp */,
 				9C8D36A726FFC68B00069748 /* actor.hpp */,
+				9C8D36A92700D67500069748 /* boards.cpp */,
+				9C8D36AA2700D67500069748 /* boards.hpp */,
+				9C8D36AC2700D93B00069748 /* config.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -642,6 +649,7 @@
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
+				9C8D36AB2700D67500069748 /* boards.cpp in Sources */,
 				9C8D36A826FFC68B00069748 /* actor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

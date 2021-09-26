@@ -14,8 +14,8 @@
             filePath = "src/ofApp.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "24"
-            endingLineNumber = "24"
+            startingLineNumber = "9"
+            endingLineNumber = "9"
             landmarkName = "ofApp::setup()"
             landmarkType = "7">
          </BreakpointContent>
@@ -23,32 +23,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2E56580A-9028-4EB9-B5AE-74EE3429191E"
+            uuid = "35E66D6B-F2C9-4F36-9722-81E7A7C47957"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "src/ofApp.cpp"
+            filePath = "src/actor.hpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
-            landmarkName = "ofApp::setAt(x, y, value)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "C43219A5-E6B7-4F55-A253-D7D01843F1CD"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/ofApp.cpp"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "98"
-            endingLineNumber = "98"
-            landmarkName = "ofApp::blurHorizontal(radius)"
+            startingLineNumber = "73"
+            endingLineNumber = "73"
+            landmarkName = "move(map)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
