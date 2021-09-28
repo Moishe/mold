@@ -14,7 +14,6 @@
 class actor {
     
 public:
-    int deposit_amt = 16;
     int light_seeking = 1;
 
     float x;
@@ -43,8 +42,40 @@ public:
     
     bool deposit() {
         Boards &boards = Boards::getInstance();
-        int amt = boards.getImageAt(x, y);
-        int total = boards.getAt(x, y) + deposit_amt * light_seeking;
+        int total = boards.getAt(x, y) + Config::deposit_amt * light_seeking;
+        int h = boards.h;
+        int w = boards.w;
+        int minx = max(0, int(round(x - Config::actor_blur_radius)));
+        int manx = min(w - 1, int(round(x + Config::actor_blur_radius)));
+        int miny = max(0, int(round(y - Config::actor_blur_radius)));
+        int maxy = min(h - 1, int(round(y + Config::actor_blur_radius)));
+        
+        if (Config::actor_blur_radius) {
+            int blur_total = 0;
+            int c = 0;
+            for (int ix = minx; ix <= manx; ix++) {
+                for (int iy = miny; iy <= maxy; iy++) {
+                    if (ix != 0 || iy != 0) {
+                        c += 1;
+                        blur_total += boards.getAt(ix, iy);
+                    }
+                }
+            }
+            
+            float avg = float(blur_total) / float(c);
+            if (avg > 255) {
+                avg = 255;
+            }
+            for (int ix = minx; ix <= manx; ix++) {
+                for (int iy = miny; iy <= maxy; iy++) {
+                    if (ix != 0 || iy != 0) {
+                        int curval = boards.getAt(ix, iy);
+                        float diff = avg - curval;
+                        boards.setAt(ix, iy, curval + diff * Config::actor_blur_interpolate);
+                    }
+                }
+            }
+        }
         boards.setAt(x, y, total);
         return total > 0 && total < 255;
     }
@@ -57,19 +88,23 @@ public:
             return false;
         }
         
-        float max_val = 0;
-        float new_direction = 0;
-        for (int i = 0; i < Config::look_segments; i++) {
-            float look_direction = float(i) / float(Config::look_segments) * Config::look_sweep - Config::look_sweep / 2;
-            float v = look_dir(look_direction);
-            if (v > max_val) {
-                max_val = v;
-                new_direction = look_direction;
-            } else if (v == max_val && ofRandom(1.0) < 0.05) {
-                new_direction = look_direction;
-            }
+        static float look_rad = 0;
+        if (!look_rad) {
+            look_rad = Config::look_sweep / float(Config::look_segments - 1);
         }
         
+        float max_val = look_dir(0);
+        float new_direction = 0;
+        float cur_dir = -Config::look_sweep / 2.0;
+        for (int i = 0; i < Config::look_segments; i++) {
+            float v = look_dir(cur_dir);
+            if (v > max_val) {
+                max_val = v;
+                new_direction = cur_dir;
+            }
+            cur_dir += look_rad;
+        }
+
         d += new_direction * Config::turn_momentum + ofRandom(Config::wander) - Config::wander / 2.0;
         
         x += cos(d) * v;
@@ -99,8 +134,8 @@ public:
         float look_x = x + cos(look_d) * Config::look_distance;
         float look_y = y + sin(look_d) * Config::look_distance;
         
-        if (look_x < 0 || look_x > boards.w ||
-            look_y < 0 || look_y > boards.h) {
+        if (look_x < 0 || look_x >= boards.w ||
+            look_y < 0 || look_y >= boards.h) {
             return 0;
         }
         
@@ -122,7 +157,6 @@ public:
         y = other.y;
         d = other.d + ofRandom(Config::wander_on_spawn) - Config::wander_on_spawn / 2.0;
         v = other.v;
-        deposit_amt = other.deposit_amt;
         light_seeking = other.light_seeking;
         next_free = -1;
         

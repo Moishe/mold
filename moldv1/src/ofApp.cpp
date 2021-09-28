@@ -4,8 +4,10 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     Boards &boards = Boards::getInstance();
-//    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/_DSC2792-Edit.jpg");
-    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/first.jpg");
+    boards.initialize(Config::width, Config::height, "");
+//    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/first2.jpg");
+//    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/tree-big.jpg");
+//    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/pond weeds.jpg");
 
     for (int i = 0; i < Config::max_actors; i++) {
         if (i < Config::seed_actors) {
@@ -101,8 +103,17 @@ void ofApp::update(){
     if (Config::blurRadius > 0) {
         boards.bufferIdx = boards.getDrawBufferIdx();
         boards.blurVertical();
-
+        boards.bufferIdx = boards.getDrawBufferIdx();
         boards.blurHorizontal();
+//        boards.bufferIdx = boards.getDrawBufferIdx();
+/*
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.blurHorizontal();
+        boards.bufferIdx = boards.getDrawBufferIdx();
+*/
+    } else if (Config::fade_amt > 0) {
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.justFade();
     } else {
         boards.bufferIdx = boards.getDrawBufferIdx();
     }

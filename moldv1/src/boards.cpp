@@ -21,6 +21,8 @@ void Boards::initialize(int width, int height, std::string filepath) {
             w = int(img.getWidth() * scale);
             h = int(img.getHeight() * scale);
             imgPixelBuffer = &img.getPixels();
+        } else {
+            imgPixelBuffer = NULL;
         }
     }
     
@@ -31,12 +33,12 @@ void Boards::initialize(int width, int height, std::string filepath) {
     // gray pixels, set them randomly
     for (int i = 0; i < w*h; i++){
         int v = 0;
-        /*
+/*
         if (imageLoaded) {
             int idx = i * 3;
             v = ((*imgPixelBuffer)[idx] + (*imgPixelBuffer)[idx + 1] + (*imgPixelBuffer)[idx + 2]) / 3;
         }
-        */
+*/
         pixelBuffer[0][i] = v;
         pixelBuffer[1][i] = v;
     }
@@ -52,12 +54,20 @@ int Boards::getAt(int x, int y) {
 }
 
 int Boards::getImageAt(int x, int y) {
-    if (x < 0 || x > w || y < 0 || y > h) {
+    if (!imgPixelBuffer) {
+        return 0;
+    }
+
+    if (x < 0 || x >= w || y < 0 || y >= h) {
         return 0;
     }
     
     int idx = (x + y * w) * 3;
-    return ((*imgPixelBuffer)[idx] + (*imgPixelBuffer)[idx + 1] + (*imgPixelBuffer)[idx + 2]) / 3;
+    if ((idx + 2) < imgPixelBuffer->getTotalBytes()) {
+        return ((*imgPixelBuffer)[idx] + (*imgPixelBuffer)[idx + 1] + (*imgPixelBuffer)[idx + 2]) / 3;
+    } else {
+        return 0;
+    }
 }
 
 int Boards::getAtWithImageBg(int x, int y) {
@@ -78,6 +88,15 @@ void Boards::setAt(int x, int y, int value) {
     pixelBuffer[getDrawBufferIdx()][x + y * w] = value;
 }
 
+void Boards::justFade() {
+    for (int x = 0; x < w; x++) {
+        for (int y = 0; y < h; y++) {
+            int val = int(round(getAt(x, y) - Config::fade_amt));
+            setAt(x, y, max(0, val));
+        }
+    }
+}
+
 void Boards::blurHorizontal () {
     for (int y = 0; y < h; y++) {
         int total = 0;
@@ -89,7 +108,7 @@ void Boards::blurHorizontal () {
         setAt(0, y, total / (Config::blurRadius * 2 + 1));
 
         // Subsequent pixels just update window total
-        for (int x = 1; x < w - Config::blurRadius; x++) {
+        for (int x = 1; x < w; x++) {
             // Subtract pixel leaving window
             total -= getAt(x - Config::blurRadius - 1, y);
             
@@ -117,7 +136,7 @@ void Boards::blurVertical () {
         setAt(x, 0, total / (Config::blurRadius * 2 + 1));
 
         // Subsequent pixels just update window total
-        for (int y = 1; y < h - Config::blurRadius; y++) {
+        for (int y = 1; y < h; y++) {
             // Subtract pixel leaving window
             total -= getAt(x, y - Config::blurRadius - 1);
             

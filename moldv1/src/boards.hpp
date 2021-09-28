@@ -26,8 +26,10 @@ public:
         return instance;
     }
     
-    void blurVertical ();
-    void blurHorizontal ();
+    void blurVertical();
+    void blurHorizontal();
+    
+    void justFade();
 
     int getReadBufferIdx();
     int getDrawBufferIdx();
