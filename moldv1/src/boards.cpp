@@ -27,7 +27,7 @@ void Boards::initialize(int width, int height, std::string filepath) {
     }
     
     for (int i = 0; i < 2; i++) {
-        pixelBuffer[i].allocate(w,h,OF_PIXELS_GRAY);
+        pixelBuffer[i].allocate(w,h,OF_PIXELS_RGB);
     }
     
     // gray pixels, set them randomly
@@ -39,21 +39,24 @@ void Boards::initialize(int width, int height, std::string filepath) {
             v = ((*imgPixelBuffer)[idx] + (*imgPixelBuffer)[idx + 1] + (*imgPixelBuffer)[idx + 2]) / 3;
         }
 */
-        pixelBuffer[0][i] = v;
-        pixelBuffer[1][i] = v;
+        pixelBuffer[0][i*3] = v;
+        pixelBuffer[0][i*3 + 1] = v;
+        pixelBuffer[0][i*3 + 2] = v;
+        pixelBuffer[1][i*3 + 1] = v;
+        pixelBuffer[1][i*3 + 2] = v;
     }
         
 }
 
-int Boards::getAt(int x, int y) {
+int Boards::getAt(int x, int y, int channel) {
     if (x < 0 || x >= w || y < 0 || y >= h) {
         return 0;
     }
     
-    return pixelBuffer[getReadBufferIdx()][x + y * w];
+    return pixelBuffer[getReadBufferIdx()][(x + y * w) * 3 + channel];
 }
 
-int Boards::getImageAt(int x, int y) {
+int Boards::getImageAt(int x, int y, int channel) {
     if (!imgPixelBuffer) {
         return 0;
     }
@@ -63,92 +66,95 @@ int Boards::getImageAt(int x, int y) {
     }
     
     int idx = (x + y * w) * 3;
-    if ((idx + 2) < imgPixelBuffer->getTotalBytes()) {
-        return ((*imgPixelBuffer)[idx] + (*imgPixelBuffer)[idx + 1] + (*imgPixelBuffer)[idx + 2]) / 3;
-    } else {
-        return 0;
-    }
+
+    return (*imgPixelBuffer)[idx + channel];
 }
 
-int Boards::getAtWithImageBg(int x, int y) {
-    int mapValue = getAt(x, y);
-    int imgValue = getImageAt(x, y);
+int Boards::getAtWithImageBg(int x, int y, int channel) {
+    int mapValue = getAt(x, y, channel);
+    int imgValue = getImageAt(x, y, channel);
     
-    return mapValue + imgValue; // TODO could weight these?
+    return 255 - abs(Config::sweet_spot - (imgValue * Config::image_multiplier + mapValue * Config::scent_multiplier));
 }
 
 
-void Boards::setAt(int x, int y, int value) {
+void Boards::setAt(int x, int y, int channel, int value) {
     if (x < 0 || x >= w || y < 0 || y >= h) {
         return;
     }
     
     value = max(0, min(255, value));
     
-    pixelBuffer[getDrawBufferIdx()][x + y * w] = value;
+    pixelBuffer[getDrawBufferIdx()][(x + y * w) * 3 + channel] = value;
 }
 
 void Boards::justFade() {
-    for (int x = 0; x < w; x++) {
-        for (int y = 0; y < h; y++) {
-            int val = int(round(getAt(x, y) - Config::fade_amt));
-            setAt(x, y, max(0, val));
+    for (int channel = 0; channel < 3; channel++) {
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                int val = int(round(getAt(x, y, channel) - Config::fade_amt));
+                setAt(x, y, channel, max(0, val));
+            }
         }
     }
 }
 
 void Boards::blurHorizontal () {
-    for (int y = 0; y < h; y++) {
-        int total = 0;
-        
-        // Process entire window for first pixel
-        for (int kx = 0; kx <= Config::blurRadius; kx++)
-            total += getAt(kx, y);
+    for (int channel = 0; channel < 3; channel++) {
+        for (int y = 0; y < h; y++) {
+            int total = 0;
+            
+            // Process entire window for first pixel
+            for (int kx = 0; kx <= Config::blurRadius; kx++)
+                total += getAt(kx, y, channel);
 
-        setAt(0, y, total / (Config::blurRadius * 2 + 1));
+            setAt(0, y, channel, total / (Config::blurRadius * 2 + 1));
 
-        // Subsequent pixels just update window total
-        for (int x = 1; x < w; x++) {
-            // Subtract pixel leaving window
-            total -= getAt(x - Config::blurRadius - 1, y);
-            
-            // Add pixel entering window
-            total += getAt(x + Config::blurRadius, y);
-            
-            total = max(0, total);
-            
-            int curval = getAt(x,y);
-            float diff = float(total) / float(Config::blurRadius * 2 + 1) - float(curval);
-            
-            setAt(x, y, max(0, int(round(curval - Config::fade_amt + diff * Config::blurInterpolate))));
+            // Subsequent pixels just update window total
+            for (int x = 1; x < w; x++) {
+                // Subtract pixel leaving window
+                total -= getAt(x - Config::blurRadius - 1, y, channel);
+                
+                // Add pixel entering window
+                total += getAt(x + Config::blurRadius, y, channel);
+                
+                total = max(0, total);
+                
+                int curval = getAt(x, y, channel);
+                float diff = float(total) / float(Config::blurRadius * 2 + 1) - float(curval);
+                
+                setAt(x, y, channel, max(0, int(round(curval - Config::fade_amt + diff * Config::blurInterpolate))));
+            }
         }
     }
 }
 
 void Boards::blurVertical () {
-    for (int x = 0; x < w; x++) {
-        int total = 0;
-        
-        // Process entire window for first pixel
-        for (int ky = 0; ky <= Config::blurRadius; ky++)
-            total += getAt(x, ky);
+    for (int channel = 0; channel < 3; channel++) {
+        for (int x = 0; x < w; x++) {
+            int total = 0;
+            
+            // Process entire window for first pixel
+            for (int ky = 0; ky <= Config::blurRadius; ky++)
+                total += getAt(x, ky, channel);
 
-        setAt(x, 0, total / (Config::blurRadius * 2 + 1));
+            setAt(x, 0, channel, total / (Config::blurRadius * 2 + 1));
 
-        // Subsequent pixels just update window total
-        for (int y = 1; y < h; y++) {
-            // Subtract pixel leaving window
-            total -= getAt(x, y - Config::blurRadius - 1);
-            
-            // Add pixel entering window
-            total += getAt(x, y + Config::blurRadius);
-            
-            total = max(0, total);
-            
-            int curval = getAt(x,y);
-            float diff = float(total) / float(Config::blurRadius * 2 + 1) - float(curval);
-            
-            setAt(x, y, max(0, int(round(curval - Config::fade_amt + diff * Config::blurInterpolate))));
+            // Subsequent pixels just update window total
+            for (int y = 1; y < h; y++) {
+                // Subtract pixel leaving window
+                total -= getAt(x, y - Config::blurRadius - 1, channel);
+                
+                // Add pixel entering window
+                total += getAt(x, y + Config::blurRadius, channel);
+                
+                total = max(0, total);
+                
+                int curval = getAt(x, y, channel);
+                float diff = float(total) / float(Config::blurRadius * 2 + 1) - float(curval);
+                
+                setAt(x, y, channel, max(0, int(round(curval - Config::fade_amt + diff * Config::blurInterpolate))));
+            }
         }
     }
 }

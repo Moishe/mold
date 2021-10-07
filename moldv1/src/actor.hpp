@@ -14,8 +14,6 @@
 class actor {
     
 public:
-    int light_seeking = 1;
-
     float x;
     float y;
 
@@ -25,6 +23,8 @@ public:
     int age;
     
     int next_free = -1;
+    
+    int goal_color[3];
     
     actor(float x, float y, float v, float d) {
         this->x = x;
@@ -38,46 +38,60 @@ public:
         y = 0;
         v = 0;
         d = 0;
+        this->goal_color[0] = 0;
+        this->goal_color[1] = 0;
+        this->goal_color[2] = 0;
     }
     
     bool deposit() {
         Boards &boards = Boards::getInstance();
-        int total = boards.getAt(x, y) + Config::deposit_amt * light_seeking;
-        int h = boards.h;
-        int w = boards.w;
-        int minx = max(0, int(round(x - Config::actor_blur_radius)));
-        int manx = min(w - 1, int(round(x + Config::actor_blur_radius)));
-        int miny = max(0, int(round(y - Config::actor_blur_radius)));
-        int maxy = min(h - 1, int(round(y + Config::actor_blur_radius)));
-        
-        if (Config::actor_blur_radius) {
-            int blur_total = 0;
-            int c = 0;
-            for (int ix = minx; ix <= manx; ix++) {
-                for (int iy = miny; iy <= maxy; iy++) {
-                    if (ix != 0 || iy != 0) {
-                        c += 1;
-                        blur_total += boards.getAt(ix, iy);
-                    }
-                }
-            }
+        bool maxed_all_channels = true;
+        int gt = 0;
+        for (int channel = 0; channel < 3; channel++) {
+            int total = boards.getAt(x, y, channel) + Config::deposit_amt;
+            gt += total;
+            int h = boards.h;
+            int w = boards.w;
+            int minx = max(0, int(round(x - Config::actor_blur_radius)));
+            int manx = min(w - 1, int(round(x + Config::actor_blur_radius)));
+            int miny = max(0, int(round(y - Config::actor_blur_radius)));
+            int maxy = min(h - 1, int(round(y + Config::actor_blur_radius)));
             
-            float avg = float(blur_total) / float(c);
-            if (avg > 255) {
-                avg = 255;
-            }
-            for (int ix = minx; ix <= manx; ix++) {
-                for (int iy = miny; iy <= maxy; iy++) {
-                    if (ix != 0 || iy != 0) {
-                        int curval = boards.getAt(ix, iy);
-                        float diff = avg - curval;
-                        boards.setAt(ix, iy, curval + diff * Config::actor_blur_interpolate);
+            if (Config::actor_blur_radius) {
+                int blur_total = total;
+                int c = 1;
+                for (int ix = minx; ix <= manx; ix++) {
+                    for (int iy = miny; iy <= maxy; iy++) {
+                        if (ix != 0 || iy != 0) {
+                            c += 1;
+                            blur_total += boards.getAt(ix, iy, channel);
+                        }
+                    }
+                }
+                
+                float avg = float(blur_total) / float(c);
+                if (avg > 255) {
+                    avg = 255;
+                }
+                for (int ix = minx; ix <= manx; ix++) {
+                    for (int iy = miny; iy <= maxy; iy++) {
+                        if (ix != 0 || iy != 0) {
+                            int curval = boards.getAt(ix, iy, channel);
+                            float diff = avg - curval;
+                            boards.setAt(ix, iy, channel, curval + diff * Config::actor_blur_interpolate);
+                        }
                     }
                 }
             }
+            if (total <= goal_color[channel]) {
+                boards.setAt(x, y, channel, total);
+            } else {
+                //boards.setAt(x, y, channel, goal_color[channel]);
+            }
+
+            maxed_all_channels &= (total >= goal_color[channel]) || total >= 255;
         }
-        boards.setAt(x, y, total);
-        return total > 0 && total < 255;
+        return gt > 0 && !maxed_all_channels;
     }
     
     bool move() {
@@ -139,7 +153,8 @@ public:
             return 0;
         }
         
-        return boards.getAtWithImageBg(look_x,look_y);
+        return -ofDistSquared(boards.getAtWithImageBg(look_x,look_y, 0), boards.getAtWithImageBg(look_x,look_y, 1), boards.getAtWithImageBg(look_x,look_y, 2),
+                             goal_color[0], goal_color[1], goal_color[2]);
     }
     
     float look(int direction) {
@@ -157,8 +172,22 @@ public:
         y = other.y;
         d = other.d + ofRandom(Config::wander_on_spawn) - Config::wander_on_spawn / 2.0;
         v = other.v;
-        light_seeking = other.light_seeking;
         next_free = -1;
+        
+        Boards &boards = Boards::getInstance();
+        int new_t = 0, old_t = 0;
+        for (int channel = 0; channel < 3; channel++) {
+            int i = boards.getImageAt(x, y, channel);
+            new_t += i;
+            old_t = other.goal_color[channel];
+            goal_color[channel] = i;
+        }
+        
+        if (old_t > new_t) {
+            for (int channel = 0; channel < 3; channel++) {
+                goal_color[channel] = other.goal_color[channel];
+            }
+        }
         
         rejuvenate();
     }

@@ -34,10 +34,10 @@ public:
     int getReadBufferIdx();
     int getDrawBufferIdx();
 
-    int getAt(int x, int y);
-    int getImageAt(int x, int y);
-    int getAtWithImageBg(int x, int y);
-    void setAt(int x, int y, int value);
+    int getAt(int x, int y, int channel);
+    int getImageAt(int x, int y, int channel);
+    int getAtWithImageBg(int x, int y, int channel);
+    void setAt(int x, int y, int channel, int value);
     
     void initialize(int w, int h, std::string imagePath);
     

@@ -1,18 +1,30 @@
 #include "ofApp.h"
 #include "config.h"
+#include <string>
 
 //--------------------------------------------------------------
 void ofApp::setup(){
     Boards &boards = Boards::getInstance();
-    boards.initialize(Config::width, Config::height, "");
-//    boards.initialize(1024, 768, "/Users/moishe/src/webgl-particles/texture/first2.jpg");
+    boards.initialize(Config::width, Config::height, Config::filename);
 //    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/tree-big.jpg");
 //    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/pond weeds.jpg");
-
+    
+    float cur_loc_x = ofRandom(boards.w);
+    float cur_loc_y = ofRandom(boards.h);
     for (int i = 0; i < Config::max_actors; i++) {
-        if (i < Config::seed_actors) {
-            actors[i].x = ofRandom(boards.w);
-            actors[i].y = ofRandom(boards.h);
+        if (i < Config::center_seed_actors * Config::actors_per_location) {
+            actors[i].x = boards.w / 2;
+            actors[i].y = boards.h / 2;
+            actors[i].d = ofRandom(PI * 2);
+            actors[i].v = 1;
+            actors[i].rejuvenate();
+        } else if (i < Config::center_seed_actors * Config::actors_per_location + Config::random_seed_actors * Config::actors_per_location ) {
+            if (i % Config::actors_per_location == 0) {
+                cur_loc_x = ofRandom(boards.w);
+                cur_loc_y = ofRandom(boards.h);
+            }
+            actors[i].x = cur_loc_x;
+            actors[i].y = cur_loc_y;
             actors[i].d = ofRandom(PI * 2);
             actors[i].v = 1;
             actors[i].rejuvenate();
@@ -21,7 +33,7 @@ void ofApp::setup(){
         }
     }
     
-    first_free_actor = Config::seed_actors + 1;
+    first_free_actor = Config::center_seed_actors + Config::random_seed_actors + 1;
 
     texGray.allocate(boards.pixelBuffer[0]);
 }
@@ -65,13 +77,24 @@ void ofApp::createActor(int i, int light_seeker) {
     int idx = first_free_actor;
     first_free_actor = actors[idx].next_free;
     actors[idx].initFromActor(actors[i]);
-    actors[idx].light_seeking = light_seeker;
 }
 
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    static long frame_number = 0;
+    
     Boards &boards = Boards::getInstance();
+
+    if (Config::blurRadius > 0) {
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.blurVertical();
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.blurHorizontal();
+    } else if (Config::fade_amt > 0) {
+        boards.bufferIdx = boards.getDrawBufferIdx();
+        boards.justFade();
+    }
 
     int readBufferIdx = boards.getReadBufferIdx();
     int drawBufferIdx = boards.getDrawBufferIdx();
@@ -84,7 +107,7 @@ void ofApp::update(){
                 // heyo let's spawn
                 bool shouldSpawn = false;
                 if (Config::useMapImgForSpawnProbability) {
-                    int mapImgValue = boards.getImageAt(actors[i].x, actors[i].y);
+                    int mapImgValue = boards.getImageAt(actors[i].x, actors[i].y, 0);
                     shouldSpawn = ofRandom(255) < mapImgValue;
                 } else {
                     shouldSpawn = ofRandom(1.0) < Config::spawnProbability;
@@ -100,25 +123,13 @@ void ofApp::update(){
         }
     }
     
-    if (Config::blurRadius > 0) {
-        boards.bufferIdx = boards.getDrawBufferIdx();
-        boards.blurVertical();
-        boards.bufferIdx = boards.getDrawBufferIdx();
-        boards.blurHorizontal();
-//        boards.bufferIdx = boards.getDrawBufferIdx();
-/*
-        boards.bufferIdx = boards.getDrawBufferIdx();
-        boards.blurHorizontal();
-        boards.bufferIdx = boards.getDrawBufferIdx();
-*/
-    } else if (Config::fade_amt > 0) {
-        boards.bufferIdx = boards.getDrawBufferIdx();
-        boards.justFade();
-    } else {
-        boards.bufferIdx = boards.getDrawBufferIdx();
+    if (Config::blurRadius == 0 && Config::fade_amt == 0) {
+       boards.bufferIdx = boards.getDrawBufferIdx();
     }
 
-    texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_LUMINANCE);
+    if (frame_number++ % Config::frame_update_rate == 0) {
+        texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_RGB);
+    }
 }
 
 //--------------------------------------------------------------
@@ -153,10 +164,34 @@ void ofApp::mousePressed(int x, int y, int button){
     
 }
 
+std::string gen_random(const int len) {
+    
+    std::string tmp_s;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    
+    srand( (unsigned) time(NULL) * getpid());
+
+    tmp_s.reserve(len);
+
+    for (int i = 0; i < len; ++i)
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    
+    
+    return tmp_s;
+    
+}
+
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
+    
     ofImage img(Boards::getInstance().pixelBuffer[0]);
-    img.save("/Users/moishe/saved-image.png");
+    std::string filename = "/Users/moishe/gen-images/saved-image-";
+    filename.append(gen_random(5));
+    filename.append(".jpg");
+    img.save(filename);
 }
 
 //--------------------------------------------------------------
