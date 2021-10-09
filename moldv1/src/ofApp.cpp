@@ -2,10 +2,35 @@
 #include "config.h"
 #include <string>
 
+std::string gen_random(const int len) {
+    
+    std::string tmp_s;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    
+    srand( (unsigned) time(NULL) * getpid());
+
+    tmp_s.reserve(len);
+
+    for (int i = 0; i < len; ++i)
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    
+    
+    return tmp_s;
+    
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     Boards &boards = Boards::getInstance();
-    boards.initialize(Config::width, Config::height, Config::filename);
+    
+    random_id = gen_random(3);
+    
+    std::string filename(Config::filename);
+    filename.append(".jpg");
+    boards.initialize(Config::width, Config::height, filename);
     
     window_width = 1024;
     window_height = 768;
@@ -136,6 +161,17 @@ void ofApp::update(){
             texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_RGB);
         }
     }
+    
+    if (frame_number % Config::save_interval == 0) {
+        ofImage img(Boards::getInstance().pixelBuffer[0]);
+        std::string filename(Config::filename);
+        filename.append("-");
+        filename.append(random_id);
+        filename.append("-");
+        filename.append(std::to_string(frame_number / Config::save_interval));
+        filename.append(".jpg");
+        img.save(filename);
+    }
 }
 
 //--------------------------------------------------------------
@@ -169,26 +205,6 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-    
-}
-
-std::string gen_random(const int len) {
-    
-    std::string tmp_s;
-    static const char alphanum[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-    
-    srand( (unsigned) time(NULL) * getpid());
-
-    tmp_s.reserve(len);
-
-    for (int i = 0; i < len; ++i)
-        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
-    
-    
-    return tmp_s;
     
 }
 

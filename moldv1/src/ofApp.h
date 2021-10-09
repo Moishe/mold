@@ -39,4 +39,6 @@ class ofApp : public ofBaseApp{
     
         int window_width;
         int window_height;
+    
+        std::string random_id;
 };
