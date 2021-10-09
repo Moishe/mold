@@ -21,6 +21,9 @@ public:
     ofPixels pixelBuffer[2];
     ofPixels *imgPixelBuffer;
     
+    unsigned char *pixelBufferRaw[2];
+    unsigned char *imgPixelBufferRaw;
+
     static Boards &getInstance() {
         static Boards instance;
         return instance;
@@ -38,6 +41,7 @@ public:
     int getImageAt(int x, int y, int channel);
     int getAtWithImageBg(int x, int y, int channel);
     void setAt(int x, int y, int channel, int value);
+    void setImageAt(int x, int y, int channel, int value);
     
     void initialize(int w, int h, std::string imagePath);
     

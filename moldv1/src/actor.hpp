@@ -90,6 +90,15 @@ public:
             }
 
             maxed_all_channels &= (total >= goal_color[channel]) || total >= 255;
+            
+            if (Config::dec_img) {
+                for (int c = 0; c < 3; c++) {
+                    int v = boards.getImageAt(x, y, c);
+                    if (v > 1) {
+                        boards.setImageAt(x, y, c, v - 1);
+                    }
+                }
+            }
         }
         return gt > 0 && !maxed_all_channels;
     }
@@ -179,11 +188,11 @@ public:
         for (int channel = 0; channel < 3; channel++) {
             int i = boards.getImageAt(x, y, channel);
             new_t += i;
-            old_t = other.goal_color[channel];
+            old_t += other.goal_color[channel];
             goal_color[channel] = i;
         }
         
-        if (old_t > new_t) {
+        if (old_t > new_t || (Config::use_initial_seed_color_forever && old_t > Config::min_viable_seed_color)) {
             for (int channel = 0; channel < 3; channel++) {
                 goal_color[channel] = other.goal_color[channel];
             }

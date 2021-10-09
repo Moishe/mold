@@ -3,12 +3,23 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "Boards::getAt(int, int, int) [inlined]:boards.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "pixelBufferRaw[getDrawBufferIdx()][(x + y * w) * 3 + channel]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "actor::deposit():actor.hpp">
          <PersistentStrings>
             <PersistentString
                value = "total">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ofApp::update():ofApp.cpp">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -36,4 +36,7 @@ class ofApp : public ofBaseApp{
         int             first_free_actor;
         
         actor actors[MAX_ACTORS];
+    
+        int window_width;
+        int window_height;
 };

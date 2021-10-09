@@ -6,8 +6,9 @@
 void ofApp::setup(){
     Boards &boards = Boards::getInstance();
     boards.initialize(Config::width, Config::height, Config::filename);
-//    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/tree-big.jpg");
-//    boards.initialize(1024, 768, "/Users/moishe/Desktop/mold-source/pond weeds.jpg");
+    
+    window_width = 1024;
+    window_height = 768;
     
     float cur_loc_x = ofRandom(boards.w);
     float cur_loc_y = ofRandom(boards.h);
@@ -115,7 +116,7 @@ void ofApp::update(){
                 if (shouldSpawn && (first_free_actor < Config::max_actors)) {
                     createActor(i);
                 }
-                if (!actors[i].deposit()) {
+                if (!actors[i].deposit() && Config::die_on_goal) {
                     freeActor(i);
                     //createActor(i, -1);
                 }
@@ -128,7 +129,12 @@ void ofApp::update(){
     }
 
     if (frame_number++ % Config::frame_update_rate == 0) {
-        texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_RGB);
+        if (Config::use_raw_buffer) {
+            boards.pixelBuffer[0].setFromPixels(boards.pixelBufferRaw[boards.getDrawBufferIdx()], boards.w, boards.h, 3);
+            texGray.loadData(boards.pixelBuffer[0].getData(), boards.w, boards.h, GL_RGB);
+        } else {
+            texGray.loadData(boards.pixelBuffer[boards.getDrawBufferIdx()].getData(), boards.w, boards.h, GL_RGB);
+        }
     }
 }
 
@@ -137,7 +143,9 @@ void ofApp::draw(){
     Boards &boards = Boards::getInstance();
     ofSetHexColor(0xffffff);
     
-    texGray.draw(0,0,boards.w,boards.h);
+    float ratio = float(window_width) / float(boards.w);
+    
+    texGray.draw(0, 0, boards.w * ratio, boards.h * ratio);
 }
 
 //--------------------------------------------------------------
@@ -206,7 +214,8 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+    window_width = w;
+    window_height = h;
 }
 
 //--------------------------------------------------------------

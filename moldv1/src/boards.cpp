@@ -21,12 +21,19 @@ void Boards::initialize(int width, int height, std::string filepath) {
             w = int(img.getWidth() * scale);
             h = int(img.getHeight() * scale);
             imgPixelBuffer = &img.getPixels();
+            
         } else {
             imgPixelBuffer = NULL;
         }
     }
     
+    imgPixelBufferRaw = (unsigned char *)malloc(w * h * 3);
+
     for (int i = 0; i < 2; i++) {
+        if (Config::use_raw_buffer) {
+            pixelBufferRaw[i] = (unsigned char *)malloc(w * h * 3);
+            memset(pixelBufferRaw[i], 0, w * h * 3);
+        }
         pixelBuffer[i].allocate(w,h,OF_PIXELS_RGB);
     }
     
@@ -44,8 +51,13 @@ void Boards::initialize(int width, int height, std::string filepath) {
         pixelBuffer[0][i*3 + 2] = v;
         pixelBuffer[1][i*3 + 1] = v;
         pixelBuffer[1][i*3 + 2] = v;
-    }
         
+        if (Config::use_raw_buffer) {
+            for (int c = 0; c < 3; c++) {
+                imgPixelBufferRaw[i * 3 + c] = (*imgPixelBuffer)[i * 3 + c];
+            }
+        }
+    }
 }
 
 int Boards::getAt(int x, int y, int channel) {
@@ -53,7 +65,12 @@ int Boards::getAt(int x, int y, int channel) {
         return 0;
     }
     
-    return pixelBuffer[getReadBufferIdx()][(x + y * w) * 3 + channel];
+    if (Config::use_raw_buffer) {
+        return pixelBufferRaw[getReadBufferIdx()][(x + y * w) * 3 + channel];
+    } else {
+        return pixelBuffer[getReadBufferIdx()][(x + y * w) * 3 + channel];
+    }
+    
 }
 
 int Boards::getImageAt(int x, int y, int channel) {
@@ -65,9 +82,11 @@ int Boards::getImageAt(int x, int y, int channel) {
         return 0;
     }
     
-    int idx = (x + y * w) * 3;
-
-    return (*imgPixelBuffer)[idx + channel];
+    int idx = (x + y * w) * 3 + channel;
+    if (Config::use_raw_buffer) {
+        return imgPixelBufferRaw[idx];
+    }
+    return (*imgPixelBuffer)[idx];
 }
 
 int Boards::getAtWithImageBg(int x, int y, int channel) {
@@ -85,7 +104,24 @@ void Boards::setAt(int x, int y, int channel, int value) {
     
     value = max(0, min(255, value));
     
-    pixelBuffer[getDrawBufferIdx()][(x + y * w) * 3 + channel] = value;
+    if (Config::use_raw_buffer) {
+        pixelBufferRaw[getDrawBufferIdx()][(x + y * w) * 3 + channel] = value;
+    } else {
+        pixelBuffer[getDrawBufferIdx()][(x + y * w) * 3 + channel] = value;
+    }
+}
+
+void Boards::setImageAt(int x, int y, int channel, int value) {
+    if (x < 0 || x >= w || y < 0 || y >= h) {
+        return;
+    }
+    int idx = (x + y * w) * 3 + channel;
+    
+    if (Config::use_raw_buffer) {
+        imgPixelBufferRaw[idx] = value;
+    } else {
+        (*imgPixelBuffer)[idx] = value;
+    }
 }
 
 void Boards::justFade() {
