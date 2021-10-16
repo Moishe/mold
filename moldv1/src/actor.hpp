@@ -17,30 +17,25 @@ public:
     float x;
     float y;
 
-    float v;
     float d;
     
     int age;
     
     int next_free = -1;
     
-    int goal_color[3];
+    ofVec3f goal_color;
     
-    actor(float x, float y, float v, float d) {
+    actor(float x, float y, float d) {
         this->x = x;
         this->y = y;
-        this->v = v;
         this->d = d;
     }
     
     actor() {
         x = 0;
         y = 0;
-        v = 0;
         d = 0;
-        this->goal_color[0] = 0;
-        this->goal_color[1] = 0;
-        this->goal_color[2] = 0;
+        this->goal_color.set(0,0,0);
     }
     
     bool deposit() {
@@ -48,7 +43,8 @@ public:
         bool maxed_all_channels = true;
         int gt = 0;
         for (int channel = 0; channel < 3; channel++) {
-            int total = boards.getAt(x, y, channel) + Config::deposit_amt;
+            int diff = goal_color[channel] - boards.getAt(x, y, channel);
+            int total = boards.getAt(x, y, channel) + diff * Config::deposit_interpolate;
             gt += total;
             int h = boards.h;
             int w = boards.w;
@@ -83,13 +79,10 @@ public:
                     }
                 }
             }
-            if (total <= goal_color[channel]) {
-                boards.setAt(x, y, channel, total);
-            } else {
-                //boards.setAt(x, y, channel, goal_color[channel]);
-            }
+            
+            boards.setAt(x, y, channel, total);
 
-            maxed_all_channels &= (total >= goal_color[channel]) || total >= 255;
+            maxed_all_channels &= (total != goal_color[channel]) && total >= 255;
             
             if (Config::dec_img) {
                 for (int c = 0; c < 3; c++) {
@@ -106,9 +99,11 @@ public:
     bool move() {
         Boards &boards = Boards::getInstance();
         
-        age--;
-        if (age <= 0) {
-            return false;
+        if (Config::actors_age) {
+            age--;
+            if (age <= 0) {
+                return false;
+            }
         }
         
         static float look_rad = 0;
@@ -128,10 +123,14 @@ public:
             cur_dir += look_rad;
         }
 
-        d += new_direction * Config::turn_momentum + ofRandom(Config::wander) - Config::wander / 2.0;
+        d += (new_direction * Config::turn_momentum + ofRandom(Config::wander) - Config::wander / 2.0);
         
-        x += cos(d) * v;
-        y += sin(d) * v;
+        //d = round(d * 8.0) / 8.0;
+        
+        float dx, dy;
+        boards.getDirections(d, &dx, &dy);
+        x += dx;
+        y += dy;
         
         if (x < 0) {
             return false;
@@ -154,8 +153,10 @@ public:
         
         float look_d = d + offset;
         
-        float look_x = x + cos(look_d) * Config::look_distance;
-        float look_y = y + sin(look_d) * Config::look_distance;
+        float dx, dy;
+        boards.getDirections(look_d, &dx, &dy);
+        float look_x = x + dx * Config::look_distance;
+        float look_y = y + dy * Config::look_distance;
         
         if (look_x < 0 || look_x >= boards.w ||
             look_y < 0 || look_y >= boards.h) {
@@ -180,7 +181,6 @@ public:
         x = other.x;
         y = other.y;
         d = other.d + ofRandom(Config::wander_on_spawn) - Config::wander_on_spawn / 2.0;
-        v = other.v;
         next_free = -1;
         
         Boards &boards = Boards::getInstance();
@@ -203,6 +203,13 @@ public:
     
     void rejuvenate() {
         age = int(ofRandom(Config::maxAge)) + Config::minAge;
+    }
+    
+    void set_goal_color() {
+        Boards &boards = Boards::getInstance();
+        for (int channel = 0; channel < 3; channel++) {
+            goal_color[channel] = boards.getImageAt(x, y, channel);
+        }
     }
 };
 

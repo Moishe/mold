@@ -3,6 +3,14 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "ofApp::setup():ofApp.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(1024 * 820) / Config::max_actors">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "Boards::getAt(int, int, int) [inlined]:boards.cpp">
          <PersistentStrings>
             <PersistentString
@@ -11,15 +19,15 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ofApp::update():ofApp.cpp">
+      </ContextState>
+      <ContextState
          contextName = "actor::deposit():actor.hpp">
          <PersistentStrings>
             <PersistentString
                value = "total">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ofApp::update():ofApp.cpp">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

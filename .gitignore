@@ -31,4 +31,7 @@
 *.out
 *.app
 
-moldv1/bin
+moldv1/bin/*
+moldv1/moldv1.xcodeproj
+
+simple-mold/*

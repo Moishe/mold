@@ -29,10 +29,10 @@ public:
         return instance;
     }
     
-    void blurVertical();
-    void blurHorizontal();
+    void blurVertical(float blur_radius, float fade_amt);
+    void blurHorizontal(float blur_radius, float fade_amt);
     
-    void justFade();
+    void justFade(float fade_amt);
 
     int getReadBufferIdx();
     int getDrawBufferIdx();
@@ -44,7 +44,11 @@ public:
     void setImageAt(int x, int y, int channel, int value);
     
     void initialize(int w, int h, std::string imagePath);
+    void preCalcDirections();
+    void getDirections(float d, float* x, float* y);
     
+    float offsets[200];
+
 private:
     Boards() {};
 };

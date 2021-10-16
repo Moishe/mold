@@ -30,6 +30,8 @@ class ofApp : public ofBaseApp{
         long total_freed = 0;
         long conflicts = 0;
     
+        void seedActorsByIntensity();
+    
         ofTexture        texGray;
 
         int             current_actors;
