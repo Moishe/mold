@@ -60,10 +60,15 @@ void Boards::initialize(int width, int height, std::string filepath) {
     
     // gray pixels, set them randomly
     for (int i = 0; i < w*h; i++){
-        if (imageLoaded) {
+        if (imageLoaded && Config::seed_image_on_board) {
             for (int c = 0; c < 3; c++) {
                 pixelBuffer[0][i * 3 + c] = (*imgPixelBuffer)[i * 3 + c];
                 pixelBuffer[1][i * 3 + c] = (*imgPixelBuffer)[i * 3 + c];
+            }
+        } else {
+            for (int c = 0; c < 3; c++) {
+                pixelBuffer[0][i * 3 + c] = 0;
+                pixelBuffer[1][i * 3 + c] = 0;
             }
         }
         
@@ -113,8 +118,9 @@ int Boards::getImageAt(int x, int y, int channel) {
 int Boards::getAtWithImageBg(int x, int y, int channel) {
     int mapValue = getAt(x, y, channel);
     int imgValue = getImageAt(x, y, channel);
+    return (mapValue + imgValue) / 2;
     
-    return 255 - abs(Config::sweet_spot - (imgValue * Config::image_multiplier + mapValue * Config::scent_multiplier));
+    //return 255 - abs(Config::sweet_spot - (imgValue * Config::image_multiplier + mapValue * Config::scent_multiplier));
 }
 
 

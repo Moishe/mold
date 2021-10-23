@@ -174,7 +174,7 @@ void ofApp::setup(){
 
     texGray.allocate(boards.pixelBuffer[0]);
     
-    ofSetWindowShape(boards.w, boards.h);
+    ofSetWindowShape(1024, 768);
 }
 
 int getPixelAt(ofPixels &buf, int x, int y) {
@@ -245,7 +245,7 @@ void ofApp::update(){
     for (int i = 0; i < Config::max_actors; i++) {
         if (actors[i].next_free == -1) {
             total_alive_actors++;
-            if (!actors[i].deposit() && Config::die_on_goal) {
+            if (!actors[i].deposit(frame_number % Config::goal_decay_period == 0) && Config::die_on_goal) {
                 freeActor(i);
             } else if (!actors[i].move()) {
                 freeActor(i);

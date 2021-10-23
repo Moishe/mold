@@ -38,11 +38,17 @@ public:
         this->goal_color.set(0,0,0);
     }
     
-    bool deposit() {
+    bool deposit(bool should_decay) {
         Boards &boards = Boards::getInstance();
         bool maxed_all_channels = true;
         int gt = 0;
+        if (should_decay && Config::goal_decay != 0) {
+            goal_color *= (1.0 - Config::goal_decay);
+        }
         for (int channel = 0; channel < 3; channel++) {
+            if (goal_color[channel] < 0) {
+                continue;
+            }
             int diff = goal_color[channel] - boards.getAt(x, y, channel);
             int total = boards.getAt(x, y, channel) + diff * Config::deposit_interpolate;
             gt += total;
@@ -82,7 +88,7 @@ public:
             
             boards.setAt(x, y, channel, total);
 
-            maxed_all_channels &= (total != goal_color[channel]) && total >= 255;
+            maxed_all_channels &= (total == goal_color[channel]) || total >= 255;
             
             if (Config::dec_img) {
                 for (int c = 0; c < 3; c++) {
@@ -183,21 +189,25 @@ public:
         d = other.d + ofRandom(Config::wander_on_spawn) - Config::wander_on_spawn / 2.0;
         next_free = -1;
         
-        Boards &boards = Boards::getInstance();
-        int new_t = 0, old_t = 0;
-        for (int channel = 0; channel < 3; channel++) {
-            int i = boards.getImageAt(x, y, channel);
-            new_t += i;
-            old_t += other.goal_color[channel];
-            goal_color[channel] = i;
-        }
-        
-        if (old_t > new_t || (Config::use_initial_seed_color_forever && old_t > Config::min_viable_seed_color)) {
+        if (Config::use_initial_seed_color_forever) {
             for (int channel = 0; channel < 3; channel++) {
                 goal_color[channel] = other.goal_color[channel];
             }
+        } else {
+            Boards &boards = Boards::getInstance();
+            ofVec3f board_color;
+            ofVec3f other_color(other.goal_color[0], other.goal_color[1], other.goal_color[2]);
+            
+            for (int channel = 0; channel < 3; channel++) {
+                board_color[channel] = boards.getImageAt(x, y, channel);
+            }
+            
+            ofVec3f middle = other_color.getInterpolated(board_color, Config::spawn_color_interpolate);
+            for (int channel = 0; channel < 3; channel++) {
+                goal_color[channel] = middle[channel];
+            }
         }
-        
+                
         rejuvenate();
     }
     

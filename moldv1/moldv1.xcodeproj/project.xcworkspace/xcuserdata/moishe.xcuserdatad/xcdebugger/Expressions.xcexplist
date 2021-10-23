@@ -20,6 +20,11 @@
       </ContextState>
       <ContextState
          contextName = "ofApp::update():ofApp.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "(frame_number % 1000) == 0">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "actor::deposit():actor.hpp">
