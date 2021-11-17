@@ -131,12 +131,18 @@ void ofApp::setup(){
         int i = 0;
         for (int x = 1; x < boards.w - 1; x++) {
             for (int y = 1; y < boards.h - 1; y++) {
-                actors[i].x = x;
-                actors[i].y = y;
-                actors[i].d = ofRandom(PI * 2);
-                actors[i].rejuvenate();
-                actors[i].set_goal_color();
-                i++;
+                int t = 0;
+                for (int channel = 0; channel < 3; channel++) {
+                    t += boards.getImageAt(x, y, channel);
+                }
+                if (t > Config::min_viable_seed_color) {
+                    actors[i].x = x;
+                    actors[i].y = y;
+                    actors[i].d = ofRandom(PI * 2);
+                    actors[i].rejuvenate();
+                    actors[i].set_goal_color();
+                    i++;
+                }
             }
         }
         first_free_actor = i;

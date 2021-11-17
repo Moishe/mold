@@ -41,7 +41,7 @@ public:
     bool deposit(bool should_decay) {
         Boards &boards = Boards::getInstance();
         bool maxed_all_channels = true;
-        int gt = 0;
+        int gt = 0, gct = 0;
         if (should_decay && Config::goal_decay != 0) {
             goal_color *= (1.0 - Config::goal_decay);
         }
@@ -51,13 +51,14 @@ public:
             }
             int diff = goal_color[channel] - boards.getAt(x, y, channel);
             int total = boards.getAt(x, y, channel) + diff * Config::deposit_interpolate;
+            gct += goal_color[channel];
             gt += total;
             int h = boards.h;
             int w = boards.w;
-            int minx = max(0, int(round(x - Config::actor_blur_radius)));
-            int manx = min(w - 1, int(round(x + Config::actor_blur_radius)));
-            int miny = max(0, int(round(y - Config::actor_blur_radius)));
-            int maxy = min(h - 1, int(round(y + Config::actor_blur_radius)));
+            int minx = max(0, int(round(x)) - Config::actor_blur_radius);
+            int manx = min(w - 1, int(round(x)) + Config::actor_blur_radius);
+            int miny = max(0, int(round(y)) - Config::actor_blur_radius);
+            int maxy = min(h - 1, int(round(y)) + Config::actor_blur_radius);
             
             if (Config::actor_blur_radius) {
                 int blur_total = total;
@@ -99,7 +100,8 @@ public:
                 }
             }
         }
-        return gt > 0 && !maxed_all_channels;
+
+        return gt > 0 && !maxed_all_channels && (gct > Config::min_viable_seed_color * 3);
     }
     
     bool move() {
